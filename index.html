@@ -484,9 +484,11 @@
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             /* ---------- Firebase ---------- */
+            // Se la pagina è ospitata su Firebase Hosting, il login usa lo stesso dominio (necessario su iPhone/Safari)
+            const onFirebaseHost = /\.(web\.app|firebaseapp\.com)$/.test(location.hostname);
             const firebaseConfig = {
                 apiKey: "AIzaSyBc2Vt0u2WRTSuKNrFOF-hQ7co_5O3PZ1s",
-                authDomain: "gestionale-3d.firebaseapp.com",
+                authDomain: onFirebaseHost ? location.hostname : "gestionale-3d.firebaseapp.com",
                 databaseURL: "https://gestionale-3d-default-rtdb.europe-west1.firebasedatabase.app",
                 projectId: "gestionale-3d",
                 storageBucket: "gestionale-3d.appspot.com",
@@ -554,14 +556,20 @@
                 const provider = new firebase.auth.GoogleAuthProvider();
                 auth.signInWithPopup(provider)
                     .catch(err => {
-                        if (err.code === 'auth/popup-blocked') return auth.signInWithRedirect(provider);
                         if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
+                        if (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment') {
+                            // Il redirect tra domini diversi non funziona su iPhone: lo uso solo se la pagina è su Firebase Hosting
+                            if (onFirebaseHost) return auth.signInWithRedirect(provider);
+                            $('loginError').textContent = 'Il browser ha bloccato la finestra di accesso. Consenti i popup per questo sito oppure accedi da computer.';
+                            return;
+                        }
                         $('loginError').textContent = 'Accesso non riuscito: ' + err.message;
                     })
                     .finally(() => { btn.disabled = false; });
             });
             $('btnLogout').addEventListener('click', () => auth.signOut());
             $('btnCambiaAccount').addEventListener('click', () => auth.signOut());
+            auth.getRedirectResult().catch(err => { $('loginError').textContent = 'Accesso non riuscito: ' + err.message; });
 
             function mostraNonAutorizzato() {
                 chiudiSheet(false);
