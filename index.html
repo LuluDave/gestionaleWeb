@@ -12,7 +12,7 @@
         :root {
             --bg: #0f172a; --card: #1e293b; --accent: #3b82f6; --accent-hover: #2563eb;
             --text: #f8fafc; --subtext: #94a3b8; --border: #334155; --success: #10b981;
-            --warning: #f59e0b; --danger: #ef4444; --whatsapp: #22c55e;
+            --warning: #f59e0b; --danger: #ef4444; --whatsapp: #22c55e; --purple: #8b5cf6;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
         body { background: var(--bg); color: var(--text); padding: 16px; max-width: 1200px; margin: 0 auto; }
@@ -36,16 +36,23 @@
         .hidden { display: none !important; }
         .grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
         @media(min-width: 768px) { .grid { grid-template-columns: 320px 1fr; } }
-        .card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); }
-        .card h2 { font-size: 1.2rem; margin-bottom: 16px; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; font-size: 0.85rem; color: var(--subtext); margin-bottom: 4px; }
-        input, select { width: 100%; padding: 10px; background: #0f172a; border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 0.95rem; }
+        .card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px; }
+        .card h2 { font-size: 1.1rem; margin-bottom: 14px; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .form-group { margin-bottom: 10px; }
+        label { display: block; font-size: 0.8rem; color: var(--subtext); margin-bottom: 4px; }
+        input, select { width: 100%; padding: 8px 10px; background: #0f172a; border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 0.9rem; }
         input:focus, select:focus { border-color: var(--accent); outline: none; }
         .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        button { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button { width: 100%; padding: 10px; background: var(--accent); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
         button:hover { background: var(--accent-hover); }
         
+        /* Box Stima Prezzo */
+        .estimator-box { background: rgba(139, 92, 246, 0.1); border: 1px dashed var(--purple); padding: 14px; border-radius: 10px; margin-bottom: 16px; }
+        .estimator-box h3 { font-size: 0.95rem; color: var(--purple); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .est-result { font-size: 1.2rem; font-weight: bold; color: #fff; margin-top: 8px; text-align: center; }
+        .btn-use-est { background: var(--purple); margin-top: 8px; padding: 6px; font-size: 0.8rem; }
+        .btn-use-est:hover { background: #7c3aed; }
+
         .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 20px; }
         .stat-box { background: var(--card); padding: 14px; border-radius: 10px; text-align: center; border: 1px solid var(--border); }
         .stat-box .val { font-size: 1.3rem; font-weight: bold; color: var(--accent); }
@@ -99,68 +106,88 @@
         </div>
 
         <div class="grid">
-            <div class="card">
-                <h2>Nuova Stampa</h2>
-                <form id="printForm">
-                    <div class="form-group">
-                        <label>Nome Oggetto</label>
-                        <input type="text" id="nome" placeholder="Es. Vaso Parametrico" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Cliente</label>
-                        <input type="text" id="cliente" placeholder="Es. Marco Rossi" required>
-                    </div>
+            <div>
+                <!-- STIMA PREZZO RAPIDA -->
+                <div class="card estimator-box">
+                    <h3>💡 Calcolatore / Stimalo</h3>
                     <div class="row-2">
                         <div class="form-group">
-                            <label>Prezzo Unit. (€)</label>
-                            <input type="number" step="0.50" id="prezzo" placeholder="15.00" required>
+                            <label>Peso (g)</label>
+                            <input type="number" id="estPeso" placeholder="50" oninput="calcolaStima()">
                         </div>
                         <div class="form-group">
-                            <label>Quantità</label>
-                            <input type="number" id="quantita" value="1" min="1" required>
+                            <label>Ore Stampa</label>
+                            <input type="number" step="0.5" id="estOre" placeholder="3" oninput="calcolaStima()">
                         </div>
                     </div>
-                    <div class="row-2">
+                    <div class="est-result" id="estRisultato">€ 0.00</div>
+                    <button class="btn-use-est" onclick="usaPrezzoStimato()">Usa questo prezzo ➔</button>
+                </div>
+
+                <!-- NUOVA STAMPA -->
+                <div class="card">
+                    <h2>Nuova Stampa</h2>
+                    <form id="printForm">
                         <div class="form-group">
-                            <label>Stato</label>
-                            <select id="stato">
-                                <option value="Da Stampare">Da Stampare</option>
-                                <option value="In Corso">In Corso</option>
-                                <option value="Pronto">Pronto</option>
-                                <option value="Consegnato">Consegnato</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Materiale</label>
-                            <select id="materiale">
-                                <option value="PLA">PLA</option>
-                                <option value="PETG">PETG</option>
-                                <option value="ABS/ASA">ABS/ASA</option>
-                                <option value="TPU">TPU</option>
-                                <option value="Resina">Resina</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row-2">
-                        <div class="form-group">
-                            <label>Peso cad. (g)</label>
-                            <input type="number" id="peso" placeholder="120">
+                            <label>Nome Oggetto</label>
+                            <input type="text" id="nome" placeholder="Es. Vaso Parametrico" required>
                         </div>
                         <div class="form-group">
-                            <label>Tempo Stampa (h)</label>
-                            <input type="number" step="0.5" id="oreStampa" placeholder="4.5">
+                            <label>Cliente</label>
+                            <input type="text" id="cliente" placeholder="Es. Marco Rossi" required>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Data</label>
-                        <input type="date" id="dataOrdine">
-                    </div>
-                    <div class="form-group">
-                        <label>Note</label>
-                        <input type="text" id="note" placeholder="Colore, impostazioni...">
-                    </div>
-                    <button type="submit">Aggiungi Stampa</button>
-                </form>
+                        <div class="row-2">
+                            <div class="form-group">
+                                <label>Prezzo Unit. (€)</label>
+                                <input type="number" step="0.50" id="prezzo" placeholder="15.00" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Quantità</label>
+                                <input type="number" id="quantita" value="1" min="1" required>
+                            </div>
+                        </div>
+                        <div class="row-2">
+                            <div class="form-group">
+                                <label>Stato</label>
+                                <select id="stato">
+                                    <option value="Da Stampare">Da Stampare</option>
+                                    <option value="In Corso">In Corso</option>
+                                    <option value="Pronto">Pronto</option>
+                                    <option value="Consegnato">Consegnato</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Materiale</label>
+                                <select id="materiale">
+                                    <option value="PLA">PLA</option>
+                                    <option value="PETG">PETG</option>
+                                    <option value="ABS/ASA">ABS/ASA</option>
+                                    <option value="TPU">TPU</option>
+                                    <option value="Resina">Resina</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row-2">
+                            <div class="form-group">
+                                <label>Peso cad. (g)</label>
+                                <input type="number" id="peso" placeholder="120">
+                            </div>
+                            <div class="form-group">
+                                <label>Tempo Stampa (h)</label>
+                                <input type="number" step="0.5" id="oreStampa" placeholder="4.5">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Data</label>
+                            <input type="date" id="dataOrdine">
+                        </div>
+                        <div class="form-group">
+                            <label>Note</label>
+                            <input type="text" id="note" placeholder="Colore, impostazioni...">
+                        </div>
+                        <button type="submit">Aggiungi Stampa</button>
+                    </form>
+                </div>
             </div>
 
             <div class="card">
@@ -212,6 +239,7 @@
         const form = id => document.getElementById(id);
         document.getElementById('dataOrdine').valueAsDate = new Date();
         let filtroStatoAttuale = 'Tutti';
+        let ultimoPrezzoStimato = 0;
 
         function loginGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
@@ -249,13 +277,43 @@
             });
         }
 
+        // Funzione calcolo stima prezzo
+        function calcolaStima() {
+            const peso = parseFloat(form('estPeso').value) || 0;
+            const ore = parseFloat(form('estOre').value) || 0;
+            
+            // Formula stimata: (Grammi * 0.03€ costo materiale) + (Ore * 1.50€ compenso tempo/energia) + 3€ base di avvio lavoro
+            const costoMateriale = peso * 0.03;
+            const costoTempo = ore * 1.50;
+            const baseAvvio = 3.00;
+            
+            if (peso === 0 && ore === 0) {
+                ultimoPrezzoStimato = 0;
+                form('estRisultato').innerText = `€ 0.00`;
+                return;
+            }
+
+            let totaleStima = costoMateriale + costoTempo + baseAvvio;
+            if (totaleStima < 5) totaleStima = 5.00; // Prezzo minimo di favore
+
+            ultimoPrezzoStimato = totaleStima;
+            form('estRisultato').innerText = `€ ${totaleStima.toFixed(2)}`;
+        }
+
+        function usaPrezzoStimato() {
+            if (ultimoPrezzoStimato > 0) {
+                form('prezzo').value = ultimoPrezzoStimato.toFixed(2);
+                form('peso').value = form('estPeso').value;
+                form('oreStampa').value = form('estOre').value;
+            }
+        }
+
         form('printForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const qta = parseInt(form('quantita').value) || 1;
             const prezzoUnitario = parseFloat(form('prezzo').value) || 0;
             const pesoCad = parseFloat(form('peso').value) || 0;
             
-            // Stima costo materiale (supponendo circa 20€ al kg / 0.02€ al grammo)
             const costoMaterialeStimato = (pesoCad * qta) * 0.02;
 
             const nuovaStampa = {
@@ -275,6 +333,10 @@
             form('printForm').reset();
             form('quantita').value = '1';
             form('dataOrdine').valueAsDate = new Date();
+            form('estPeso').value = '';
+            form('estOre').value = '';
+            form('estRisultato').innerText = '€ 0.00';
+            ultimoPrezzoStimato = 0;
         });
 
         function cancella(id) {
@@ -314,7 +376,6 @@
                 const nomeOggetto = (s.nome || '').toLowerCase();
                 const nomeCliente = (s.cliente || '').toLowerCase();
 
-                // Filtri ricerca e stato
                 if (filtroTesto && !nomeOggetto.includes(filtroTesto) && !nomeCliente.includes(filtroTesto)) return;
                 if (filtroStatoAttuale !== 'Tutti' && s.stato !== filtroStatoAttuale) return;
 
