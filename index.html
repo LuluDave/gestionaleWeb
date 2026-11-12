@@ -686,7 +686,7 @@
 
             /* ---------- Google Drive: permesso richiesto a parte, solo quando serve caricare un file ---------- */
             // Sostituisci con il Client ID OAuth del progetto Firebase (Google Cloud Console → Credenziali)
-            const DRIVE_CLIENT_ID = '459711176944-8jqemoa48kvuc7ebdghqibvbma23eoh4.apps.googleusercontent.com';
+            const DRIVE_CLIENT_ID = 'INSERISCI_QUI_IL_CLIENT_ID.apps.googleusercontent.com';
             const MAX_FILE_MB = 150;
             let driveToken = null, driveScadenza = 0, driveTokenClient = null;
             function clienteTokenDrive() {
@@ -704,38 +704,55 @@
             }
             function tokenDrive() {
                 return new Promise((resolve, reject) => {
-                    if (driveToken && Date.now() < driveScadenza) return resolve(driveToken);
+                    if (driveToken && Date.now() < driveScadenza) { console.log('Drive: token già valido, lo riuso'); return resolve(driveToken); }
                     let client;
                     try { client = clienteTokenDrive(); } catch (e) { return reject(e); }
+                    let deciso = false;
+                    const scaduto = setTimeout(() => {
+                        if (deciso) return;
+                        deciso = true;
+                        console.warn('Drive: nessuna risposta dalla finestra di autorizzazione entro 30 secondi');
+                        reject(new Error('Tempo scaduto in attesa dell\'autorizzazione a Google Drive. Riprova.'));
+                    }, 30000);
                     client.callback = resp => {
-                        if (resp.error) return reject(new Error('Autorizzazione a Google Drive non riuscita (' + resp.error + ')'));
+                        if (deciso) return;
+                        deciso = true;
+                        clearTimeout(scaduto);
+                        if (resp.error) { console.warn('Drive: autorizzazione rifiutata', resp); return reject(new Error('Autorizzazione a Google Drive non riuscita (' + resp.error + ')')); }
+                        console.log('Drive: token ottenuto, valido per', resp.expires_in, 'secondi');
                         driveToken = resp.access_token;
                         driveScadenza = Date.now() + Math.max(60, (resp.expires_in || 3300) - 60) * 1000;
                         resolve(driveToken);
                     };
+                    console.log('Drive: apro la richiesta di autorizzazione...');
                     client.requestAccessToken({ prompt: driveToken ? '' : 'consent' });
                 });
             }
             async function cartellaDrive(token) {
+                console.log('Drive: cerco la cartella salvata...');
                 const snap = await db.ref('impostazioni/driveFolderId').once('value');
-                if (snap.val()) return snap.val();
+                if (snap.val()) { console.log('Drive: cartella già esistente', snap.val()); return snap.val(); }
+                console.log('Drive: creo una nuova cartella...');
                 const res = await fetch('https://www.googleapis.com/drive/v3/files?fields=id', {
                     method: 'POST',
                     headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name: 'DL3D Stampe - Modelli', mimeType: 'application/vnd.google-apps.folder' })
                 });
-                if (!res.ok) throw new Error('Impossibile creare la cartella su Drive');
+                if (!res.ok) { console.warn('Drive: creazione cartella fallita', res.status, await res.text().catch(() => '')); throw new Error('Impossibile creare la cartella su Drive (' + res.status + ')'); }
                 const dati = await res.json();
+                console.log('Drive: cartella creata', dati.id);
                 await db.ref('impostazioni/driveFolderId').set(dati.id);
                 return dati.id;
             }
             function caricaSuDrive(file, token, folderId, onProgress) {
                 return new Promise((resolve, reject) => {
+                    console.log('Drive: avvio il caricamento del file...');
                     const avvio = new XMLHttpRequest();
                     avvio.open('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,webViewLink,size');
                     avvio.setRequestHeader('Authorization', 'Bearer ' + token);
                     avvio.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
                     avvio.onload = () => {
+                        console.log('Drive: risposta avvio caricamento', avvio.status);
                         if (avvio.status < 200 || avvio.status >= 300) return reject(new Error('Avvio caricamento non riuscito (' + avvio.status + ')'));
                         const posizione = avvio.getResponseHeader('Location');
                         if (!posizione) return reject(new Error('Risposta inattesa da Google Drive'));
@@ -744,6 +761,7 @@
                         invio.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
                         invio.upload.onprogress = e => { if (e.lengthComputable && onProgress) onProgress(Math.round(e.loaded / e.total * 100)); };
                         invio.onload = () => {
+                            console.log('Drive: risposta caricamento file', invio.status);
                             if (invio.status < 200 || invio.status >= 300) return reject(new Error('Caricamento non riuscito (' + invio.status + ')'));
                             try { resolve(JSON.parse(invio.responseText)); } catch (e) { reject(e); }
                         };
@@ -1038,6 +1056,7 @@
                     calcolaStima();
                     chiudiSheet();
                 } catch (err) {
+                    console.error('Salvataggio non riuscito', err);
                     toast('Salvataggio non riuscito: ' + (err.code || err.message || err));
                 } finally {
                     btn.disabled = false;
