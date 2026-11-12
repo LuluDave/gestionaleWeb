@@ -171,6 +171,18 @@
 
         .edit-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: -4px 0 14px; padding: 8px 12px; border-radius: 10px; background: rgba(139,92,246,.14); border: 1px solid rgba(139,92,246,.4); font-size: .9rem; color: #ddd0ff; }
 
+        input[type="file"] { padding: 9px 10px; font-size: .88rem; }
+        input[type="file"]::file-selector-button { font: inherit; font-weight: 700; color: #fff; background: var(--accent); border: 0; border-radius: 7px; padding: 7px 12px; margin-right: 10px; cursor: pointer; }
+        .file-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; padding: 8px 10px; border-radius: 9px; background: var(--bg); border: 1px solid var(--border); font-size: .85rem; }
+        .file-row a { color: #93c5fd; text-decoration: none; overflow-wrap: anywhere; }
+        .file-row a:hover { text-decoration: underline; }
+        .file-row span { overflow-wrap: anywhere; }
+        .upload-bar { height: 6px; border-radius: 3px; background: var(--border); margin-top: 8px; overflow: hidden; }
+        .upload-bar i { display: block; height: 100%; width: 0%; background: var(--accent); transition: width .2s; }
+        .upload-txt { font-size: .8rem; color: var(--subtext); margin-top: 4px; }
+        .attach-link { display: inline-flex; align-items: center; gap: 4px; color: #93c5fd; text-decoration: none; font-weight: 600; }
+        .attach-link:hover { text-decoration: underline; }
+
         /* ---------- Pannello laterale (desktop) / bottom sheet (mobile) ---------- */
         .sheet-head { display: none; }
         .backdrop {
@@ -420,7 +432,7 @@
                             <input type="number" inputmode="numeric" id="estQta" value="1" min="1">
                         </div>
                     </div>
-                    <div class="est-label">Prezzo consigliato a pezzo (per pezzi superiori a 5 euro)</div>
+                    <div class="est-label">Prezzo consigliato a pezzo</div>
                     <div class="est-result" id="estRisultato" aria-live="polite">€ 0.00</div>
                     <div class="est-detail" id="estDettaglio"></div>
                     <button class="btn btn-purple" id="btnUsaStima" type="button">Usa questo prezzo</button>
@@ -493,8 +505,16 @@
                             <input type="date" id="dataOrdine">
                         </div>
                         <div class="form-group">
-                            <label for="note">Note (anche link al modello)</label>
-                            <input type="text" id="note" placeholder="Colore, impostazioni, link..." autocomplete="off">
+                            <label for="note">Note</label>
+                            <input type="text" id="note" placeholder="Colore, impostazioni..." autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="modelFile">Modello 3D (STL o 3MF, facoltativo)</label>
+                            <input type="file" id="modelFile" accept=".stl,.3mf">
+                            <div class="file-row hidden" id="fileAttuale"></div>
+                            <div class="file-row hidden" id="fileSelezionato"></div>
+                            <div class="upload-bar hidden" id="uploadBar"><i id="uploadBarFill"></i></div>
+                            <div class="upload-txt hidden" id="uploadTxt"></div>
                         </div>
                         <button type="submit" class="btn btn-primary" id="btnSalva">Aggiungi stampa</button>
                     </form>
@@ -587,6 +607,7 @@
             let handler = null;
             let primoAccesso = true;
             let modificaId = null;
+            let rimuoviAllegato = false;
 
             $('dataOrdine').value = oggi();
             const optMateriali = MATERIALI.map(m => `<option value="${m}">${m}</option>`).join('');
@@ -640,12 +661,19 @@
             window.matchMedia('(min-width: 1100px)').addEventListener('change', e => { if (e.matches) chiudiSheet(false); });
 
             /* ---------- Autenticazione ---------- */
+            function nuovoProviderGoogle() {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                provider.addScope('https://www.googleapis.com/auth/drive.file');
+                return provider;
+            }
+
             $('btnGoogle').addEventListener('click', () => {
                 const btn = $('btnGoogle');
                 btn.disabled = true;
                 $('loginError').textContent = '';
-                const provider = new firebase.auth.GoogleAuthProvider();
+                const provider = nuovoProviderGoogle();
                 auth.signInWithPopup(provider)
+                    .then(salvaTokenDrive)
                     .catch(err => {
                         if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
                         if (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment') {
@@ -660,7 +688,67 @@
             });
             $('btnLogout').addEventListener('click', () => auth.signOut());
             $('btnCambiaAccount').addEventListener('click', () => auth.signOut());
-            auth.getRedirectResult().catch(err => { $('loginError').textContent = 'Accesso non riuscito: ' + err.message; });
+            auth.getRedirectResult().then(res => { if (res && res.user) salvaTokenDrive(res); }).catch(err => { $('loginError').textContent = 'Accesso non riuscito: ' + err.message; });
+
+            /* ---------- Google Drive: i file vengono salvati in una cartella sul tuo Drive ---------- */
+            const MAX_FILE_MB = 150;
+            let driveToken = null, driveScadenza = 0;
+            function salvaTokenDrive(res) {
+                const cred = firebase.auth.GoogleAuthProvider.credentialFromResult(res);
+                if (cred && cred.accessToken) { driveToken = cred.accessToken; driveScadenza = Date.now() + 55 * 60 * 1000; }
+            }
+            async function tokenDrive() {
+                if (driveToken && Date.now() < driveScadenza) return driveToken;
+                const res = await auth.currentUser.reauthenticateWithPopup(nuovoProviderGoogle());
+                salvaTokenDrive(res);
+                if (!driveToken) throw new Error('Autorizzazione a Google Drive non riuscita');
+                return driveToken;
+            }
+            async function cartellaDrive(token) {
+                const snap = await db.ref('impostazioni/driveFolderId').once('value');
+                if (snap.val()) return snap.val();
+                const res = await fetch('https://www.googleapis.com/drive/v3/files?fields=id', {
+                    method: 'POST',
+                    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: 'DL3D Stampe - Modelli', mimeType: 'application/vnd.google-apps.folder' })
+                });
+                if (!res.ok) throw new Error('Impossibile creare la cartella su Drive');
+                const dati = await res.json();
+                await db.ref('impostazioni/driveFolderId').set(dati.id);
+                return dati.id;
+            }
+            function caricaSuDrive(file, token, folderId, onProgress) {
+                return new Promise((resolve, reject) => {
+                    const avvio = new XMLHttpRequest();
+                    avvio.open('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,webViewLink,size');
+                    avvio.setRequestHeader('Authorization', 'Bearer ' + token);
+                    avvio.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+                    avvio.onload = () => {
+                        if (avvio.status < 200 || avvio.status >= 300) return reject(new Error('Avvio caricamento non riuscito (' + avvio.status + ')'));
+                        const posizione = avvio.getResponseHeader('Location');
+                        if (!posizione) return reject(new Error('Risposta inattesa da Google Drive'));
+                        const invio = new XMLHttpRequest();
+                        invio.open('PUT', posizione);
+                        invio.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+                        invio.upload.onprogress = e => { if (e.lengthComputable && onProgress) onProgress(Math.round(e.loaded / e.total * 100)); };
+                        invio.onload = () => {
+                            if (invio.status < 200 || invio.status >= 300) return reject(new Error('Caricamento non riuscito (' + invio.status + ')'));
+                            try { resolve(JSON.parse(invio.responseText)); } catch (e) { reject(e); }
+                        };
+                        invio.onerror = () => reject(new Error('Errore di rete durante il caricamento'));
+                        invio.send(file);
+                    };
+                    avvio.onerror = () => reject(new Error('Errore di rete durante l\'avvio del caricamento'));
+                    avvio.send(JSON.stringify({ name: file.name, parents: [folderId] }));
+                });
+            }
+            async function eliminaDaDrive(id, token) {
+                try { await fetch('https://www.googleapis.com/drive/v3/files/' + id, { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } }); }
+                catch (e) { /* il file resta su Drive, poco male: si può eliminare a mano */ }
+            }
+            const fmtMB = b => (b / (1024 * 1024)).toFixed(b >= 1024 * 1024 ? 1 : 2) + ' MB';
+            // Un file duplicato resta collegato a più stampe: non va cancellato da Drive finché ne serve ad almeno una
+            const fileUsatoAltrove = (escludiId, driveId) => !!driveId && stampe.some(x => x.id !== escludiId && x.modelloId === driveId);
 
             function mostraNonAutorizzato() {
                 chiudiSheet(false);
@@ -789,6 +877,11 @@
                 $('printForm').reset();
                 $('quantita').value = '1';
                 $('dataOrdine').value = oggi();
+                rimuoviAllegato = false;
+                $('fileAttuale').classList.add('hidden');
+                $('fileSelezionato').classList.add('hidden');
+                $('uploadBar').classList.add('hidden');
+                $('uploadTxt').classList.add('hidden');
             }
             function fineModifica() {
                 modificaId = null;
@@ -798,6 +891,31 @@
                 $('btnSalva').textContent = 'Aggiungi stampa';
                 $('modificaBanner').classList.add('hidden');
             }
+
+            // Mostra il file scelto da caricare, con un modo per annullare la scelta
+            $('modelFile').addEventListener('change', () => {
+                const f = $('modelFile').files[0];
+                const riga = $('fileSelezionato');
+                if (!f) { riga.classList.add('hidden'); return; }
+                if (!/\.(stl|3mf)$/i.test(f.name)) {
+                    toast('Sono ammessi solo file .stl o .3mf');
+                    $('modelFile').value = '';
+                    riga.classList.add('hidden');
+                    return;
+                }
+                if (f.size > MAX_FILE_MB * 1024 * 1024) {
+                    toast('File troppo grande: il limite è ' + MAX_FILE_MB + ' MB');
+                    $('modelFile').value = '';
+                    riga.classList.add('hidden');
+                    return;
+                }
+                riga.innerHTML = `<span>📎 ${esc(f.name)} (${fmtMB(f.size)})</span>`;
+                const x = document.createElement('button');
+                x.type = 'button'; x.className = 'link-btn'; x.textContent = 'Annulla';
+                x.addEventListener('click', () => { $('modelFile').value = ''; riga.classList.add('hidden'); });
+                riga.append(x);
+                riga.classList.remove('hidden');
+            });
             function iniziaModifica(s) {
                 modificaId = s.id;
                 $('nome').value = s.nome || '';
@@ -815,11 +933,34 @@
                 $('sheetTitolo').textContent = 'Modifica stampa';
                 $('btnSalva').textContent = 'Salva modifiche';
                 $('modificaBanner').classList.remove('hidden');
+                rimuoviAllegato = false;
+                const rigaAttuale = $('fileAttuale');
+                if (s.modelloLink) {
+                    rigaAttuale.innerHTML = `<a href="${esc(s.modelloLink)}" target="_blank" rel="noopener noreferrer">📎 ${esc(s.modelloNome || 'file')}${s.modelloDimensione ? ' (' + fmtMB(s.modelloDimensione) + ')' : ''}</a>`;
+                    const x = document.createElement('button');
+                    x.type = 'button'; x.className = 'link-btn'; x.textContent = 'Rimuovi';
+                    x.addEventListener('click', () => { rimuoviAllegato = true; rigaAttuale.classList.add('hidden'); });
+                    rigaAttuale.append(x);
+                    rigaAttuale.classList.remove('hidden');
+                } else {
+                    rigaAttuale.classList.add('hidden');
+                }
                 apriSheet();
             }
             $('btnAnnullaModifica').addEventListener('click', () => { fineModifica(); chiudiSheet(); });
 
-            $('printForm').addEventListener('submit', e => {
+            function mostraCaricamento(percento, testo) {
+                $('uploadBar').classList.remove('hidden');
+                $('uploadTxt').classList.remove('hidden');
+                $('uploadBarFill').style.width = percento + '%';
+                $('uploadTxt').textContent = testo;
+            }
+            function nascondiCaricamento() {
+                $('uploadBar').classList.add('hidden');
+                $('uploadTxt').classList.add('hidden');
+            }
+
+            $('printForm').addEventListener('submit', async e => {
                 e.preventDefault();
                 const qta = parseInt($('quantita').value) || 1;
                 const prezzoUnitario = parseFloat($('prezzo').value) || 0;
@@ -827,6 +968,8 @@
                 const ore = $('oreStampa').value;
                 const stato = $('stato').value;
                 const materiale = $('materiale').value;
+                const fileNuovo = $('modelFile').files[0] || null;
+                const precedente = modificaId ? (stampe.find(x => x.id === modificaId) || {}) : {};
 
                 const dati = {
                     nome: $('nome').value.trim(),
@@ -842,27 +985,53 @@
                     data: $('dataOrdine').value || '-',
                     note: $('note').value.trim()
                 };
+                if (fileNuovo) { dati.modelloNome = null; dati.modelloLink = null; dati.modelloId = null; dati.modelloDimensione = null; }
+                else if (rimuoviAllegato) { dati.modelloNome = null; dati.modelloLink = null; dati.modelloId = null; dati.modelloDimensione = null; }
 
-                if (modificaId) {
-                    const prima = stampe.find(x => x.id === modificaId) || {};
-                    dati.prontoDa = stato === 'Pronto' ? (prima.stato === 'Pronto' && prima.prontoDa ? prima.prontoDa : Date.now()) : null;
-                    stampeRef.child(modificaId).update(dati)
-                        .then(() => toast('Modifiche salvate'))
-                        .catch(err => toast('Salvataggio non riuscito: ' + err.code));
-                    fineModifica();
-                } else {
-                    if (stato === 'Pronto') dati.prontoDa = Date.now();
-                    stampeRef.push(dati)
-                        .then(() => toast('Stampa aggiunta'))
-                        .catch(err => toast('Salvataggio non riuscito: ' + err.code));
-                    azzeraModulo();
+                const btn = $('btnSalva');
+                const testoBtn = btn.textContent;
+                btn.disabled = true;
+
+                try {
+                    if (fileNuovo) {
+                        mostraCaricamento(0, 'Autorizzazione a Google Drive...');
+                        const token = await tokenDrive();
+                        mostraCaricamento(0, 'Preparazione cartella su Drive...');
+                        const folderId = await cartellaDrive(token);
+                        const risultato = await caricaSuDrive(fileNuovo, token, folderId, p => mostraCaricamento(p, 'Caricamento su Drive... ' + p + '%'));
+                        dati.modelloNome = risultato.name;
+                        dati.modelloLink = risultato.webViewLink;
+                        dati.modelloId = risultato.id;
+                        dati.modelloDimensione = parseInt(risultato.size) || fileNuovo.size;
+                        if (modificaId && precedente.modelloId && !fileUsatoAltrove(modificaId, precedente.modelloId)) eliminaDaDrive(precedente.modelloId, token);
+                    } else if (rimuoviAllegato && precedente.modelloId && !fileUsatoAltrove(modificaId, precedente.modelloId)) {
+                        const token = await tokenDrive();
+                        eliminaDaDrive(precedente.modelloId, token);
+                    }
+
+                    if (modificaId) {
+                        dati.prontoDa = stato === 'Pronto' ? (precedente.stato === 'Pronto' && precedente.prontoDa ? precedente.prontoDa : Date.now()) : null;
+                        await stampeRef.child(modificaId).update(dati);
+                        toast('Modifiche salvate');
+                        fineModifica();
+                    } else {
+                        if (stato === 'Pronto') dati.prontoDa = Date.now();
+                        await stampeRef.push(dati);
+                        toast('Stampa aggiunta');
+                        azzeraModulo();
+                    }
+                    $('estPeso').value = '';
+                    $('estOre').value = '';
+                    $('estQta').value = '1';
+                    calcolaStima();
+                    chiudiSheet();
+                } catch (err) {
+                    toast('Salvataggio non riuscito: ' + (err.code || err.message || err));
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = testoBtn;
+                    nascondiCaricamento();
                 }
-
-                $('estPeso').value = '';
-                $('estOre').value = '';
-                $('estQta').value = '1';
-                calcolaStima();
-                chiudiSheet();
             });
 
             // Se scegli un cliente già noto, riporta il suo numero WhatsApp
@@ -885,10 +1054,21 @@
                 switch (btn.dataset.act) {
                     case 'del': {
                         const { id: _id, ...backup } = s;
-                        stampeRef.child(id).remove().then(() => toast('Stampa eliminata', {
-                            label: 'Annulla',
-                            fn: () => stampeRef.child(id).set(backup).then(() => toast('Stampa ripristinata'))
-                        }));
+                        const driveId = s.modelloId;
+                        stampeRef.child(id).remove().then(() => {
+                            let annullato = false;
+                            // Il file su Drive viene rimosso solo se nessun'altra stampa (es. un duplicato) lo usa ancora
+                            if (driveId && !fileUsatoAltrove(id, driveId)) {
+                                setTimeout(async () => {
+                                    if (annullato) return;
+                                    try { const token = await tokenDrive(); await eliminaDaDrive(driveId, token); } catch (e) { /* pulizia non riuscita: il file resta su Drive */ }
+                                }, 6500);
+                            }
+                            toast('Stampa eliminata', {
+                                label: 'Annulla',
+                                fn: () => { annullato = true; stampeRef.child(id).set(backup).then(() => toast('Stampa ripristinata')); }
+                            });
+                        });
                         break;
                     }
                     case 'edit':
@@ -1018,12 +1198,13 @@
                     const i = STATI.indexOf(s.stato);
                     const qty = s.quantita > 1 ? `<span class="qty">x${esc(s.quantita)}</span>` : '';
                     const note = s.note ? ' · ' + linkify(s.note) : '';
+                    const allegato = s.modelloLink ? ` · <a href="${esc(s.modelloLink)}" target="_blank" rel="noopener noreferrer" class="attach-link">📎 ${esc(s.modelloNome || 'modello')}</a>` : '';
                     const giorni = s.stato === 'Pronto' && s.prontoDa ? Math.floor((adesso - s.prontoDa) / 864e5) : 0;
                     const fermo = giorni >= GIORNI_FERMO ? ` · <span class="late">Pronto da ${giorni} giorni</span>` : '';
                     const opts = STATI.map(st => `<option value="${st}"${s.stato === st ? ' selected' : ''}>${st}</option>`).join('');
                     return `
                     <article class="order st-${i}" data-id="${esc(s.id)}">
-                        <div class="o-name"><strong>${esc(s.nome)}</strong>${qty}<small>${esc(fmtData(s.data))}${fermo}${note}</small></div>
+                        <div class="o-name"><strong>${esc(s.nome)}</strong>${qty}<small>${esc(fmtData(s.data))}${fermo}${note}${allegato}</small></div>
                         <div class="o-client">${esc(s.cliente)}</div>
                         <div class="o-total">${eur(s.prezzoTotale || 0)}</div>
                         <div class="o-info">${esc(s.materiale)} (${esc(s.peso)})<br>⏱️ ${esc(s.oreStampa)}</div>
