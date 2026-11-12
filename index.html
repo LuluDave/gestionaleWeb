@@ -204,4 +204,74 @@
                 const data = snapshot.val();
                 stampe = [];
                 if (data) {
-                    Object.keys(data).
+                    Object.keys(data).forEach(key => {
+                        stampe.push({ id: key, ...data[key] });
+                    });
+                    stampe.reverse();
+                }
+                render();
+            });
+        }
+
+        form('printForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nuovaStampa = {
+                nome: form('nome').value,
+                cliente: form('cliente').value,
+                prezzo: parseFloat(form('prezzo').value) || 0,
+                stato: form('stato').value,
+                peso: form('peso').value ? form('peso').value + 'g' : '-',
+                materiale: form('materiale').value,
+                note: form('note').value
+            };
+            stampeRef.push(nuovaStampa);
+            form('printForm').reset();
+        });
+
+        function cancella(id) {
+            if(confirm('Vuoi eliminare questa stampa?')) {
+                db.ref('stampe3d/' + id).remove();
+            }
+        }
+
+        function cambiaStato(id, nuovoStato) {
+            db.ref('stampe3d/' + id).update({ stato: nuovoStato });
+        }
+
+        function render() {
+            const tbody = form('listaStampe');
+            tbody.innerHTML = '';
+            
+            let totale = 0;
+            let daIncassare = 0;
+
+            stampe.forEach(s => {
+                totale += s.prezzo;
+                if(s.stato !== 'Consegnato') daIncassare += s.prezzo;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${s.nome}</strong><br><small style="color:var(--subtext)">${s.note}</small></td>
+                    <td>${s.cliente}</td>
+                    <td>€ ${s.prezzo.toFixed(2)}</td>
+                    <td>${s.materiale} (${s.peso})</td>
+                    <td>
+                        <select onchange="cambiaStato('${s.id}', this.value)" style="padding:4px; font-size:0.8rem;">
+                            <option value="Da Stampare" ${s.stato==='Da Stampare'?'selected':''}>Da Stampare</option>
+                            <option value="In Corso" ${s.stato==='In Corso'?'selected':''}>In Corso</option>
+                            <option value="Pronto" ${s.stato==='Pronto'?'selected':''}>Pronto</option>
+                            <option value="Consegnato" ${s.stato==='Consegnato'?'selected':''}>Consegnato</option>
+                        </select>
+                    </td>
+                    <td><button class="btn-del" onclick="cancella('${s.id}')">🗑️</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            form('st-totale').innerText = `€ ${totale.toFixed(2)}`;
+            form('st-consegno').innerText = `€ ${daIncassare.toFixed(2)}`;
+            form('st-count').innerText = stampe.length;
+        }
+    </script>
+</body>
+</html>
