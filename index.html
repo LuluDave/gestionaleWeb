@@ -12,7 +12,7 @@
         :root {
             --bg: #0f172a; --card: #1e293b; --accent: #3b82f6; --accent-hover: #2563eb;
             --text: #f8fafc; --subtext: #94a3b8; --border: #334155; --success: #10b981;
-            --warning: #f59e0b; --danger: #ef4444;
+            --warning: #f59e0b; --danger: #ef4444; --whatsapp: #22c55e;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
         body { background: var(--bg); color: var(--text); padding: 16px; max-width: 1200px; margin: 0 auto; }
@@ -45,15 +45,27 @@
         .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         button { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         button:hover { background: var(--accent-hover); }
+        
         .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 20px; }
         .stat-box { background: var(--card); padding: 14px; border-radius: 10px; text-align: center; border: 1px solid var(--border); }
         .stat-box .val { font-size: 1.3rem; font-weight: bold; color: var(--accent); }
         .stat-box .lbl { font-size: 0.75rem; color: var(--subtext); }
+        
+        .filters { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .filter-btn { background: var(--border); color: var(--text); border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; width: auto; }
+        .filter-btn.active { background: var(--accent); font-weight: bold; }
+
+        .search-box { margin-bottom: 12px; }
         .table-wrapper { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
         th, td { padding: 12px; border-bottom: 1px solid var(--border); }
         th { background: #0f172a; color: var(--subtext); font-weight: 600; }
-        .btn-del { background: transparent; color: var(--danger); border: none; cursor: pointer; font-size: 1.1rem; width: auto; padding: 4px; }
+        
+        .actions-cell { display: flex; gap: 6px; align-items: center; }
+        .btn-action { background: transparent; border: none; cursor: pointer; font-size: 1.1rem; padding: 4px; border-radius: 4px; }
+        .btn-wa { color: var(--whatsapp); }
+        .btn-del { color: var(--danger); }
+        
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .btn-logout { background: var(--danger); width: auto; padding: 8px 14px; font-size: 0.85rem; }
         .btn-logout:hover { background: #dc2626; }
@@ -82,6 +94,7 @@
         <div class="stats">
             <div class="stat-box"><div class="val" id="st-totale">€ 0.00</div><div class="lbl">Incasso Totale</div></div>
             <div class="stat-box"><div class="val" id="st-consegno">€ 0.00</div><div class="lbl">Da Incassare</div></div>
+            <div class="stat-box"><div class="val" id="st-profitto">€ 0.00</div><div class="lbl">Profitto Stimato</div></div>
             <div class="stat-box"><div class="val" id="st-count">0</div><div class="lbl">Stampe Totali</div></div>
         </div>
 
@@ -99,9 +112,15 @@
                     </div>
                     <div class="row-2">
                         <div class="form-group">
-                            <label>Prezzo (€)</label>
+                            <label>Prezzo Unit. (€)</label>
                             <input type="number" step="0.50" id="prezzo" placeholder="15.00" required>
                         </div>
+                        <div class="form-group">
+                            <label>Quantità</label>
+                            <input type="number" id="quantita" value="1" min="1" required>
+                        </div>
+                    </div>
+                    <div class="row-2">
                         <div class="form-group">
                             <label>Stato</label>
                             <select id="stato">
@@ -110,12 +129,6 @@
                                 <option value="Pronto">Pronto</option>
                                 <option value="Consegnato">Consegnato</option>
                             </select>
-                        </div>
-                    </div>
-                    <div class="row-2">
-                        <div class="form-group">
-                            <label>Peso (grammi)</label>
-                            <input type="number" id="peso" placeholder="120">
                         </div>
                         <div class="form-group">
                             <label>Materiale</label>
@@ -128,6 +141,20 @@
                             </select>
                         </div>
                     </div>
+                    <div class="row-2">
+                        <div class="form-group">
+                            <label>Peso cad. (g)</label>
+                            <input type="number" id="peso" placeholder="120">
+                        </div>
+                        <div class="form-group">
+                            <label>Tempo Stampa (h)</label>
+                            <input type="number" step="0.5" id="oreStampa" placeholder="4.5">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input type="date" id="dataOrdine">
+                    </div>
                     <div class="form-group">
                         <label>Note</label>
                         <input type="text" id="note" placeholder="Colore, impostazioni...">
@@ -137,16 +164,26 @@
             </div>
 
             <div class="card">
+                <div class="search-box">
+                    <input type="text" id="cercaInput" placeholder="🔍 Cerca oggetto o cliente..." oninput="render()">
+                </div>
+                <div class="filters">
+                    <button class="filter-btn active" onclick="impostaFiltro('Tutti', this)">Tutti</button>
+                    <button class="filter-btn" onclick="impostaFiltro('Da Stampare', this)">Da Stampare</button>
+                    <button class="filter-btn" onclick="impostaFiltro('In Corso', this)">In Corso</button>
+                    <button class="filter-btn" onclick="impostaFiltro('Pronto', this)">Pronti</button>
+                    <button class="filter-btn" onclick="impostaFiltro('Consegnato', this)">Consegnati</button>
+                </div>
                 <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
                                 <th>Oggetto</th>
                                 <th>Cliente</th>
-                                <th>Prezzo</th>
-                                <th>Materiale</th>
+                                <th>Totale</th>
+                                <th>Info</th>
                                 <th>Stato</th>
-                                <th></th>
+                                <th>Azioni</th>
                             </tr>
                         </thead>
                         <tbody id="listaStampe"></tbody>
@@ -157,7 +194,6 @@
     </div>
 
     <script>
-        // CONFIGURAZIONE FIREBASE CORRETTA
         const firebaseConfig = {
             apiKey: "AIzaSyBc2Vt0u2WRTSuKNrFOF-hQ7co_5O3PZ1s",
             authDomain: "gestionale-3d.firebaseapp.com",
@@ -174,6 +210,8 @@
         const stampeRef = db.ref('stampe3d');
 
         const form = id => document.getElementById(id);
+        document.getElementById('dataOrdine').valueAsDate = new Date();
+        let filtroStatoAttuale = 'Tutti';
 
         function loginGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
@@ -182,9 +220,7 @@
             });
         }
 
-        function logout() {
-            auth.signOut();
-        }
+        function logout() { auth.signOut(); }
 
         auth.onAuthStateChanged((user) => {
             if (user) {
@@ -215,17 +251,30 @@
 
         form('printForm').addEventListener('submit', (e) => {
             e.preventDefault();
+            const qta = parseInt(form('quantita').value) || 1;
+            const prezzoUnitario = parseFloat(form('prezzo').value) || 0;
+            const pesoCad = parseFloat(form('peso').value) || 0;
+            
+            // Stima costo materiale (supponendo circa 20€ al kg / 0.02€ al grammo)
+            const costoMaterialeStimato = (pesoCad * qta) * 0.02;
+
             const nuovaStampa = {
                 nome: form('nome').value,
                 cliente: form('cliente').value,
-                prezzo: parseFloat(form('prezzo').value) || 0,
+                prezzoTotale: prezzoUnitario * qta,
+                quantita: qta,
                 stato: form('stato').value,
-                peso: form('peso').value ? form('peso').value + 'g' : '-',
+                peso: pesoCad ? pesoCad + 'g' : '-',
                 materiale: form('materiale').value,
+                oreStampa: form('oreStampa').value ? form('oreStampa').value + 'h' : '-',
+                costoMateriale: costoMaterialeStimato,
+                data: form('dataOrdine').value || '-',
                 note: form('note').value
             };
             stampeRef.push(nuovaStampa);
             form('printForm').reset();
+            form('quantita').value = '1';
+            form('dataOrdine').valueAsDate = new Date();
         });
 
         function cancella(id) {
@@ -238,23 +287,52 @@
             db.ref('stampe3d/' + id).update({ stato: nuovoStato });
         }
 
+        function impostaFiltro(stato, btn) {
+            filtroStatoAttuale = stato;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            render();
+        }
+
+        function inviaWhatsApp(nome, cliente, prezzo, stato) {
+            const testo = `Ciao ${cliente}! Ti aggiorno sul tuo ordine di stampa 3D ("${nome}"). Stato attuale: *${stato}*. Totale: € ${prezzo.toFixed(2)}. Grazie!`;
+            const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(testo)}`;
+            window.open(url, '_blank');
+        }
+
         function render() {
             const tbody = form('listaStampe');
             tbody.innerHTML = '';
             
-            let totale = 0;
+            const filtroTesto = form('cercaInput').value.toLowerCase();
+            let totaleIncasso = 0;
             let daIncassare = 0;
+            let totaleCosti = 0;
+            let countTotali = 0;
 
             stampe.forEach(s => {
-                totale += s.prezzo;
-                if(s.stato !== 'Consegnato') daIncassare += s.prezzo;
+                const nomeOggetto = (s.nome || '').toLowerCase();
+                const nomeCliente = (s.cliente || '').toLowerCase();
+
+                // Filtri ricerca e stato
+                if (filtroTesto && !nomeOggetto.includes(filtroTesto) && !nomeCliente.includes(filtroTesto)) return;
+                if (filtroStatoAttuale !== 'Tutti' && s.stato !== filtroStatoAttuale) return;
+
+                const prezzo = s.prezzoTotale || 0;
+                const costoMat = s.costoMateriale || 0;
+                totaleIncasso += prezzo;
+                totaleCosti += costoMat;
+                if(s.stato !== 'Consegnato') daIncassare += prezzo;
+                countTotali++;
+
+                const qtaBadge = s.quantita > 1 ? ` <span style="background:var(--accent); padding:1px 5px; border-radius:4px; font-size:0.7rem;">x${s.quantita}</span>` : '';
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><strong>${s.nome}</strong><br><small style="color:var(--subtext)">${s.note}</small></td>
+                    <td><strong>${s.nome}</strong>${qtaBadge}<br><small style="color:var(--subtext)">${s.data}</small></td>
                     <td>${s.cliente}</td>
-                    <td>€ ${s.prezzo.toFixed(2)}</td>
-                    <td>${s.materiale} (${s.peso})</td>
+                    <td><strong>€ ${prezzo.toFixed(2)}</strong></td>
+                    <td><small>${s.materiale} (${s.peso})<br>⏱️ ${s.oreStampa}</small></td>
                     <td>
                         <select onchange="cambiaStato('${s.id}', this.value)" style="padding:4px; font-size:0.8rem;">
                             <option value="Da Stampare" ${s.stato==='Da Stampare'?'selected':''}>Da Stampare</option>
@@ -263,14 +341,20 @@
                             <option value="Consegnato" ${s.stato==='Consegnato'?'selected':''}>Consegnato</option>
                         </select>
                     </td>
-                    <td><button class="btn-del" onclick="cancella('${s.id}')">🗑️</button></td>
+                    <td>
+                        <div class="actions-cell">
+                            <button class="btn-action btn-wa" title="Invia promemoria WhatsApp" onclick="inviaWhatsApp('${s.nome}', '${s.cliente}', ${prezzo}, '${s.stato}')">💬</button>
+                            <button class="btn-action btn-del" title="Elimina" onclick="cancella('${s.id}')">🗑️</button>
+                        </div>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            form('st-totale').innerText = `€ ${totale.toFixed(2)}`;
+            form('st-totale').innerText = `€ ${totaleIncasso.toFixed(2)}`;
             form('st-consegno').innerText = `€ ${daIncassare.toFixed(2)}`;
-            form('st-count').innerText = stampe.length;
+            form('st-profitto').innerText = `€ ${(totaleIncasso - totaleCosti).toFixed(2)}`;
+            form('st-count').innerText = countTotali;
         }
     </script>
 </body>
