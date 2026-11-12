@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#090d16">
     <meta name="color-scheme" content="dark">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="DL 3D">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" href="icon.png">
     <title>DL 3D - Gestionale Stampe</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -77,6 +83,9 @@
         .btn-ghost-danger { width: auto; background: rgba(239,68,68,.10); color: var(--danger); border: 1px solid rgba(239,68,68,.30); padding: 8px 14px; min-height: 40px; font-size: .85rem; }
         .btn-ghost-danger:hover { background: var(--danger); color: #fff; }
 
+        .link-btn { font: inherit; font-size: .85rem; font-weight: 700; color: #93c5fd; background: none; border: 0; cursor: pointer; padding: 6px 4px; min-height: 32px; }
+        .link-btn:hover { text-decoration: underline; }
+
         .icon-btn {
             font-size: 1rem; width: 40px; height: 40px; flex: none; display: grid; place-items: center; cursor: pointer;
             background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; color: var(--text);
@@ -84,9 +93,10 @@
         }
         .icon-btn:active { transform: scale(.94); }
         .icon-btn.wa:hover { background: rgba(34,197,94,.15); border-color: var(--whatsapp); }
+        .icon-btn.edit:hover, .icon-btn.dup:hover { background: rgba(59,130,246,.15); border-color: var(--accent); }
         .icon-btn.del:hover { background: rgba(239,68,68,.15); border-color: var(--danger); }
 
-        /* ---------- Login ---------- */
+        /* ---------- Schermate di accesso ---------- */
         .gate {
             max-width: 420px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column;
             justify-content: center; align-items: center; text-align: center; padding: 24px 20px;
@@ -120,17 +130,16 @@
         .brand-name span { color: var(--subtext); font-weight: 600; }
 
         /* ---------- Statistiche ---------- */
-        .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
-        .stat {
-            background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px;
-            min-width: 0;
-        }
+        .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
+        .stat { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; min-width: 0; }
         .stat .lbl { font-size: .8rem; color: var(--subtext); display: flex; align-items: center; gap: 7px; }
         .stat .lbl::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--accent)); box-shadow: 0 0 10px var(--c, var(--accent)); }
         .stat .val { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.25rem, 5.2vw, 1.7rem); margin-top: 6px; font-variant-numeric: tabular-nums; white-space: nowrap; }
         .stat:nth-child(2) { --c: var(--warning); }
         .stat:nth-child(3) { --c: var(--success); }
         .stat:nth-child(4) { --c: var(--purple); }
+
+        .insights { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2px 16px; color: var(--subtext); font-size: .85rem; margin: 0 2px 16px; }
 
         /* ---------- Layout ---------- */
         .layout { display: grid; grid-template-columns: 1fr; gap: 20px; align-items: start; }
@@ -141,7 +150,13 @@
 
         .estimator { background: linear-gradient(135deg, rgba(139,92,246,.10), rgba(59,130,246,.08)); border-color: rgba(139,92,246,.32); }
         .estimator h2 { color: #d4c5ff; border-bottom-color: rgba(139,92,246,.25); }
-        .est-result { font-family: var(--font-display); font-size: 1.8rem; font-weight: 800; text-align: center; margin: 8px 0 12px; font-variant-numeric: tabular-nums; }
+        .est-result { font-family: var(--font-display); font-size: 1.9rem; font-weight: 800; text-align: center; margin: 6px 0 2px; font-variant-numeric: tabular-nums; }
+        .est-label { text-align: center; font-size: .8rem; color: var(--subtext); }
+        .est-detail { text-align: center; font-size: .85rem; color: #c4b5fd; margin: 4px 0 12px; min-height: 1.3em; }
+        .est-settings { margin-top: 14px; border-top: 1px solid rgba(139,92,246,.25); padding-top: 10px; }
+        .est-settings summary { cursor: pointer; font-size: .9rem; color: #d4c5ff; font-weight: 500; min-height: 32px; display: flex; align-items: center; }
+        .est-settings .cost-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; margin-top: 10px; }
+        .est-hint { font-size: .8rem; color: var(--subtext); margin-bottom: 8px; }
 
         .form-group { margin-bottom: 12px; }
         label { display: block; font-size: .85rem; color: var(--subtext); margin-bottom: 5px; font-weight: 500; }
@@ -153,6 +168,8 @@
         input::placeholder { color: #5b6b85; }
         input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,.2); }
         .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .edit-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: -4px 0 14px; padding: 8px 12px; border-radius: 10px; background: rgba(139,92,246,.14); border: 1px solid rgba(139,92,246,.4); font-size: .9rem; color: #ddd0ff; }
 
         /* ---------- Pannello laterale (desktop) / bottom sheet (mobile) ---------- */
         .sheet-head { display: none; }
@@ -196,7 +213,7 @@
         }
 
         @media (min-width: 700px) {
-            .stats { grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+            .stats { grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 14px; }
             .stat { padding: 18px 20px; }
         }
 
@@ -238,12 +255,15 @@
         .o-name { grid-area: name; min-width: 0; }
         .o-name strong { font-size: 1.02rem; overflow-wrap: anywhere; }
         .o-name small { display: block; color: var(--subtext); font-size: .8rem; margin-top: 2px; overflow-wrap: anywhere; }
+        .o-name small a { color: #93c5fd; text-decoration: none; }
+        .o-name small a:hover { text-decoration: underline; }
+        .late { color: var(--warning); font-weight: 700; }
         .qty { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 6px; background: var(--accent); font-size: .72rem; font-weight: 700; vertical-align: 1px; }
         .o-client { grid-area: client; color: var(--subtext); font-size: .92rem; overflow-wrap: anywhere; }
         .o-total { grid-area: total; font-family: var(--font-display); font-weight: 700; font-size: 1.08rem; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
         .o-info { grid-area: info; color: var(--subtext); font-size: .85rem; }
         .o-status { grid-area: status; min-width: 0; }
-        .o-actions { grid-area: actions; display: flex; gap: 8px; justify-content: flex-end; }
+        .o-actions { grid-area: actions; display: flex; gap: 6px; justify-content: flex-end; }
 
         .status-select {
             min-height: 40px; padding: 6px 30px 6px 12px; font-size: .9rem; font-weight: 700; border-radius: 20px;
@@ -269,14 +289,12 @@
         @keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
 
         /* Tabella su contenitori larghi (container query: funziona anche con pannello laterale) */
-        @container (min-width: 720px) {
+        @container (min-width: 800px) {
             .orders-head, .order {
-                grid-template-columns: minmax(150px, 2fr) minmax(90px, 1.2fr) 84px minmax(120px, 1.3fr) 150px 92px;
-                gap: 0 12px; align-items: center;
+                grid-template-columns: minmax(140px, 2fr) minmax(80px, 1.2fr) 76px minmax(110px, 1.3fr) 140px 156px;
+                gap: 0 10px; align-items: center;
             }
-            .orders-head {
-                display: grid; padding: 0 16px 8px; color: var(--subtext); font-size: .8rem; font-weight: 500;
-            }
+            .orders-head { display: grid; padding: 0 16px 8px; color: var(--subtext); font-size: .8rem; font-weight: 500; }
             .order-list { gap: 0; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
             .order {
                 grid-template-areas: "name client total info status actions" "bar bar bar bar bar bar";
@@ -286,6 +304,7 @@
             .order:last-child { border-bottom: 0; }
             .order:hover { background: rgba(255,255,255,.025); }
             .o-total { text-align: left; }
+            .o-actions .icon-btn { width: 34px; height: 34px; font-size: .9rem; }
             .layers { margin: 12px -16px 0; gap: 0; }
             .layers i { border-radius: 0; height: 3px; }
         }
@@ -293,11 +312,14 @@
         /* ---------- Toast ---------- */
         .toast {
             position: fixed; z-index: 70; left: 50%; bottom: calc(84px + var(--safe-b)); transform: translate(-50%, 20px);
+            display: flex; align-items: center; gap: 14px;
             background: #e2e8f0; color: #0f172a; font-weight: 700; font-size: .92rem; padding: 11px 18px; border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0,0,0,.45); opacity: 0; pointer-events: none; max-width: calc(100vw - 32px);
             transition: opacity .25s, transform .25s;
         }
         .toast.show { opacity: 1; transform: translate(-50%, 0); }
+        .toast.has-action.show { pointer-events: auto; }
+        .toast button { font: inherit; font-weight: 800; color: #1d4ed8; background: none; border: 0; cursor: pointer; padding: 6px; min-height: 36px; }
         @media (min-width: 1100px) { .toast { bottom: 28px; } }
 
         /* ---------- Un solo momento di ingresso, all'accesso ---------- */
@@ -356,19 +378,23 @@
             <button class="btn btn-ghost-danger" id="btnLogout" type="button">Esci</button>
         </header>
 
-        <section class="stats" aria-label="Riepilogo">
+        <section class="stats" aria-label="Riepilogo generale">
             <div class="stat"><div class="lbl">Incasso totale</div><div class="val" id="st-totale">€ 0.00</div></div>
             <div class="stat"><div class="lbl">Da incassare</div><div class="val" id="st-consegno">€ 0.00</div></div>
             <div class="stat"><div class="lbl">Profitto stimato</div><div class="val" id="st-profitto">€ 0.00</div></div>
             <div class="stat"><div class="lbl">Stampe totali</div><div class="val" id="st-count">0</div></div>
         </section>
+        <div class="insights hidden" id="insights">
+            <span id="insTesto"></span>
+            <button class="link-btn" id="btnCsv" type="button">⬇ Esporta CSV</button>
+        </div>
 
         <div class="layout">
             <!-- Pannello: sidebar su desktop, bottom sheet su smartphone/tablet -->
             <aside class="side" id="side" aria-label="Nuova stampa">
                 <div class="sheet-head">
                     <span class="grab"></span>
-                    <strong>Nuova stampa</strong>
+                    <strong id="sheetTitolo">Nuova stampa</strong>
                     <button class="icon-btn" id="btnChiudi" type="button" aria-label="Chiudi">✕</button>
                 </div>
 
@@ -376,20 +402,43 @@
                     <h2>💡 Calcolatore prezzo</h2>
                     <div class="row-2">
                         <div class="form-group">
-                            <label for="estPeso">Peso (g)</label>
-                            <input type="number" inputmode="decimal" id="estPeso" placeholder="50" min="0">
+                            <label for="estPeso">Peso per pezzo (g)</label>
+                            <input type="number" inputmode="decimal" step="any" id="estPeso" placeholder="50" min="0">
                         </div>
                         <div class="form-group">
-                            <label for="estOre">Ore stampa</label>
-                            <input type="number" inputmode="decimal" step="0.5" id="estOre" placeholder="3" min="0">
+                            <label for="estOre">Ore per pezzo</label>
+                            <input type="number" inputmode="decimal" step="any" id="estOre" placeholder="3" min="0">
                         </div>
                     </div>
+                    <div class="row-2">
+                        <div class="form-group">
+                            <label for="estMateriale">Materiale</label>
+                            <select id="estMateriale"></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="estQta">Quantità</label>
+                            <input type="number" inputmode="numeric" id="estQta" value="1" min="1">
+                        </div>
+                    </div>
+                    <div class="est-label">Prezzo consigliato a pezzo</div>
                     <div class="est-result" id="estRisultato" aria-live="polite">€ 0.00</div>
+                    <div class="est-detail" id="estDettaglio"></div>
                     <button class="btn btn-purple" id="btnUsaStima" type="button">Usa questo prezzo</button>
+
+                    <details class="est-settings">
+                        <summary>Costi e margine</summary>
+                        <p class="est-hint">I valori si salvano su questo dispositivo.</p>
+                        <div class="cost-grid" id="costiGrid"></div>
+                        <button class="link-btn" id="btnResetCosti" type="button">Ripristina valori iniziali</button>
+                    </details>
                 </section>
 
-                <section class="card">
-                    <h2 class="form-title">📦 Nuova stampa</h2>
+                <section class="card" id="formCard">
+                    <h2 id="formTitolo">📦 Nuova stampa</h2>
+                    <div class="edit-banner hidden" id="modificaBanner">
+                        <span>Stai modificando una stampa</span>
+                        <button class="link-btn" id="btnAnnullaModifica" type="button">Annulla</button>
+                    </div>
                     <form id="printForm">
                         <div class="form-group">
                             <label for="nome">Nome oggetto</label>
@@ -397,7 +446,12 @@
                         </div>
                         <div class="form-group">
                             <label for="cliente">Cliente</label>
-                            <input type="text" id="cliente" placeholder="Es. Marco Rossi" autocomplete="off" required>
+                            <input type="text" id="cliente" list="clienti" placeholder="Es. Marco Rossi" autocomplete="off" required>
+                            <datalist id="clienti"></datalist>
+                        </div>
+                        <div class="form-group">
+                            <label for="telefono">WhatsApp del cliente (facoltativo)</label>
+                            <input type="tel" id="telefono" placeholder="Es. 333 1234567" autocomplete="off">
                         </div>
                         <div class="row-2">
                             <div class="form-group">
@@ -421,23 +475,17 @@
                             </div>
                             <div class="form-group">
                                 <label for="materiale">Materiale</label>
-                                <select id="materiale">
-                                    <option value="PLA">PLA</option>
-                                    <option value="PETG">PETG</option>
-                                    <option value="ABS/ASA">ABS/ASA</option>
-                                    <option value="TPU">TPU</option>
-                                    <option value="Resina">Resina</option>
-                                </select>
+                                <select id="materiale"></select>
                             </div>
                         </div>
                         <div class="row-2">
                             <div class="form-group">
                                 <label for="peso">Peso cad. (g)</label>
-                                <input type="number" inputmode="decimal" id="peso" placeholder="120" min="0">
+                                <input type="number" inputmode="decimal" step="any" id="peso" placeholder="120" min="0">
                             </div>
                             <div class="form-group">
-                                <label for="oreStampa">Tempo stampa (h)</label>
-                                <input type="number" inputmode="decimal" step="0.5" id="oreStampa" placeholder="4.5" min="0">
+                                <label for="oreStampa">Tempo cad. (h)</label>
+                                <input type="number" inputmode="decimal" step="any" id="oreStampa" placeholder="4.5" min="0">
                             </div>
                         </div>
                         <div class="form-group">
@@ -445,10 +493,10 @@
                             <input type="date" id="dataOrdine">
                         </div>
                         <div class="form-group">
-                            <label for="note">Note</label>
-                            <input type="text" id="note" placeholder="Colore, impostazioni..." autocomplete="off">
+                            <label for="note">Note (anche link al modello)</label>
+                            <input type="text" id="note" placeholder="Colore, impostazioni, link..." autocomplete="off">
                         </div>
-                        <button type="submit" class="btn btn-primary">Aggiungi stampa</button>
+                        <button type="submit" class="btn btn-primary" id="btnSalva">Aggiungi stampa</button>
                     </form>
                 </section>
             </aside>
@@ -504,32 +552,75 @@
             const $ = id => document.getElementById(id);
             const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
             const eur = n => '€ ' + n.toFixed(2);
+            const num = id => parseFloat($(id).value) || 0;
             const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             const STATI = ['Da Stampare', 'In Corso', 'Pronto', 'Consegnato'];
+            const MATERIALI = ['PLA', 'PETG', 'ABS/ASA', 'TPU', 'Resina'];
+            const GIORNI_FERMO = 3;
             const oggi = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
             const fmtData = d => /^\d{4}-\d{2}-\d{2}$/.test(d || '') ? d.split('-').reverse().join('/') : (d || '-');
+            const isMobile = () => !window.matchMedia('(min-width: 1100px)').matches;
+
+            // Rende cliccabili i link nelle note (il testo è già ripulito da esc)
+            function linkify(testo) {
+                return esc(testo).replace(/https?:\/\/[^\s]+/g, u => {
+                    try {
+                        const host = new URL(u.replace(/&amp;/g, '&')).hostname.replace(/^www\./, '');
+                        return `<a href="${u}" target="_blank" rel="noopener noreferrer">🔗 ${esc(host)}</a>`;
+                    } catch (e) { return u; }
+                });
+            }
+
+            // Numero WhatsApp: accetta 333 1234567, +39 333..., 0039...
+            function numeroWa(t) {
+                let n = String(t || '').replace(/[^\d+]/g, '');
+                if (!n) return '';
+                if (n.startsWith('+')) n = n.slice(1);
+                else if (n.startsWith('00')) n = n.slice(2);
+                else if (/^3\d{8,9}$/.test(n) || /^0\d{6,10}$/.test(n)) n = '39' + n;
+                return n.replace(/\D/g, '');
+            }
 
             let stampe = [];
             let caricato = false;
             let filtroStato = 'Tutti';
-            let ultimoPrezzoStimato = 0;
             let handler = null;
             let primoAccesso = true;
+            let modificaId = null;
 
             $('dataOrdine').value = oggi();
+            const optMateriali = MATERIALI.map(m => `<option value="${m}">${m}</option>`).join('');
+            $('materiale').innerHTML = optMateriali;
+            $('estMateriale').innerHTML = optMateriali;
 
+            /* ---------- Notifiche (con azione opzionale, es. Annulla) ---------- */
             let toastT;
-            function toast(msg) {
+            function toast(msg, azione, ms = 2400) {
                 const t = $('toast');
-                t.textContent = msg;
+                t.textContent = '';
+                const sp = document.createElement('span');
+                sp.textContent = msg;
+                t.append(sp);
+                t.classList.toggle('has-action', !!azione);
+                if (azione) {
+                    const b = document.createElement('button');
+                    b.type = 'button';
+                    b.textContent = azione.label;
+                    b.addEventListener('click', () => { t.classList.remove('show'); azione.fn(); });
+                    t.append(b);
+                }
                 t.classList.add('show');
                 clearTimeout(toastT);
-                toastT = setTimeout(() => t.classList.remove('show'), 2400);
+                toastT = setTimeout(() => t.classList.remove('show'), azione ? 6000 : ms);
             }
 
             /* ---------- Pannello nuova stampa (bottom sheet su mobile) ---------- */
             const side = $('side'), backdrop = $('backdrop');
             function apriSheet() {
+                if (!isMobile()) {
+                    $('formCard').scrollIntoView({ block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
+                    return;
+                }
                 side.classList.add('open');
                 backdrop.classList.add('show');
                 document.body.classList.add('lock');
@@ -593,6 +684,7 @@
                     caricaDati();
                 } else {
                     chiudiSheet(false);
+                    fineModifica();
                     fermaDati();
                     $('loginScreen').classList.remove('hidden');
                     $('deniedScreen').classList.add('hidden');
@@ -621,85 +713,209 @@
                 caricato = false;
             }
 
-            /* ---------- Calcolatore prezzo ---------- */
-            function calcolaStima() {
-                const peso = parseFloat($('estPeso').value) || 0;
-                const ore = parseFloat($('estOre').value) || 0;
-                if (peso === 0 && ore === 0) {
-                    ultimoPrezzoStimato = 0;
-                } else {
-                    ultimoPrezzoStimato = Math.max(5, peso * 0.03 + ore * 1.50 + 3.00);
-                }
-                $('estRisultato').textContent = eur(ultimoPrezzoStimato);
+            /* ---------- Costi e calcolatore prezzo ---------- */
+            const CHIAVE_COSTI = 'dl3d-costi';
+            const COSTI_BASE = { kg: { 'PLA': 20, 'PETG': 22, 'ABS/ASA': 25, 'TPU': 30, 'Resina': 35 }, ora: 1, margine: 100, avvio: 1 };
+            const copia = o => JSON.parse(JSON.stringify(o));
+            function leggiCosti() {
+                try {
+                    const s = JSON.parse(localStorage.getItem(CHIAVE_COSTI));
+                    if (s && s.kg) return { ...copia(COSTI_BASE), ...s, kg: { ...COSTI_BASE.kg, ...s.kg } };
+                } catch (e) { /* storage non disponibile: uso i valori iniziali */ }
+                return copia(COSTI_BASE);
             }
-            $('estPeso').addEventListener('input', calcolaStima);
-            $('estOre').addEventListener('input', calcolaStima);
-            $('btnUsaStima').addEventListener('click', () => {
-                if (ultimoPrezzoStimato > 0) {
-                    $('prezzo').value = ultimoPrezzoStimato.toFixed(2);
-                    $('peso').value = $('estPeso').value;
-                    $('oreStampa').value = $('estOre').value;
-                    toast('Prezzo inserito nel modulo');
-                    $('prezzo').scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
-                }
+            let costi = leggiCosti();
+            const salvaCosti = () => { try { localStorage.setItem(CHIAVE_COSTI, JSON.stringify(costi)); } catch (e) { /* ignoro */ } };
+            const costoMateriale = (grammi, mat) => grammi * (costi.kg[mat] || 0) / 1000;
+
+            function disegnaCosti() {
+                $('costiGrid').innerHTML =
+                    MATERIALI.map((m, i) => `<div class="form-group"><label for="kg${i}">${m} (€/kg)</label><input type="number" inputmode="decimal" step="any" min="0" id="kg${i}" data-kg="${m}" value="${costi.kg[m]}"></div>`).join('') +
+                    `<div class="form-group"><label for="cOra">Macchina e corrente (€/h)</label><input type="number" inputmode="decimal" step="any" min="0" id="cOra" value="${costi.ora}"></div>` +
+                    `<div class="form-group"><label for="cMargine">Margine (%)</label><input type="number" inputmode="decimal" step="any" min="0" id="cMargine" value="${costi.margine}"></div>` +
+                    `<div class="form-group"><label for="cAvvio">Costo fisso a pezzo (€)</label><input type="number" inputmode="decimal" step="any" min="0" id="cAvvio" value="${costi.avvio}"></div>`;
+            }
+            disegnaCosti();
+            $('costiGrid').addEventListener('input', e => {
+                const el = e.target;
+                const v = parseFloat(el.value);
+                const val = isNaN(v) || v < 0 ? 0 : v;
+                if (el.dataset.kg) costi.kg[el.dataset.kg] = val;
+                else if (el.id === 'cOra') costi.ora = val;
+                else if (el.id === 'cMargine') costi.margine = val;
+                else if (el.id === 'cAvvio') costi.avvio = val;
+                salvaCosti();
+                calcolaStima();
+            });
+            $('btnResetCosti').addEventListener('click', () => {
+                costi = copia(COSTI_BASE);
+                salvaCosti();
+                disegnaCosti();
+                calcolaStima();
+                toast('Valori iniziali ripristinati');
             });
 
-            /* ---------- Nuova stampa ---------- */
+            let stima = null;
+            function calcolaStima() {
+                const peso = num('estPeso'), ore = num('estOre'), mat = $('estMateriale').value;
+                const qta = Math.max(1, parseInt($('estQta').value) || 1);
+                if (!peso && !ore) {
+                    stima = null;
+                    $('estRisultato').textContent = eur(0);
+                    $('estDettaglio').textContent = '';
+                    return;
+                }
+                const costo = costoMateriale(peso, mat) + ore * costi.ora;
+                let unit = costo * (1 + costi.margine / 100) + costi.avvio;
+                unit = Math.max(5, Math.ceil(unit * 2) / 2); // minimo 5 €, arrotondato a 0,50 per eccesso
+                stima = { unit, qta, peso, ore, mat };
+                $('estRisultato').textContent = eur(unit);
+                $('estDettaglio').textContent = `Costo ${eur(costo)} · guadagno ${eur(unit - costo)}` + (qta > 1 ? ` · totale ×${qta}: ${eur(unit * qta)}` : '');
+            }
+            ['estPeso', 'estOre', 'estQta', 'estMateriale'].forEach(id => $(id).addEventListener('input', calcolaStima));
+            $('btnUsaStima').addEventListener('click', () => {
+                if (!stima) return;
+                $('prezzo').value = stima.unit.toFixed(2);
+                $('quantita').value = stima.qta;
+                $('peso').value = stima.peso || '';
+                $('oreStampa').value = stima.ore || '';
+                $('materiale').value = stima.mat;
+                toast('Prezzo inserito nel modulo');
+                $('prezzo').scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
+            });
+
+            /* ---------- Nuova stampa / modifica ---------- */
+            function azzeraModulo() {
+                $('printForm').reset();
+                $('quantita').value = '1';
+                $('dataOrdine').value = oggi();
+            }
+            function fineModifica() {
+                modificaId = null;
+                azzeraModulo();
+                $('formTitolo').textContent = '📦 Nuova stampa';
+                $('sheetTitolo').textContent = 'Nuova stampa';
+                $('btnSalva').textContent = 'Aggiungi stampa';
+                $('modificaBanner').classList.add('hidden');
+            }
+            function iniziaModifica(s) {
+                modificaId = s.id;
+                $('nome').value = s.nome || '';
+                $('cliente').value = s.cliente || '';
+                $('telefono').value = s.telefono || '';
+                $('prezzo').value = ((s.prezzoTotale || 0) / (s.quantita || 1)).toFixed(2);
+                $('quantita').value = s.quantita || 1;
+                $('stato').value = STATI.includes(s.stato) ? s.stato : 'Da Stampare';
+                $('materiale').value = MATERIALI.includes(s.materiale) ? s.materiale : MATERIALI[0];
+                $('peso').value = parseFloat(s.peso) || '';
+                $('oreStampa').value = parseFloat(s.oreStampa) || '';
+                $('dataOrdine').value = /^\d{4}-\d{2}-\d{2}$/.test(s.data || '') ? s.data : '';
+                $('note').value = s.note || '';
+                $('formTitolo').textContent = '✏️ Modifica stampa';
+                $('sheetTitolo').textContent = 'Modifica stampa';
+                $('btnSalva').textContent = 'Salva modifiche';
+                $('modificaBanner').classList.remove('hidden');
+                apriSheet();
+            }
+            $('btnAnnullaModifica').addEventListener('click', () => { fineModifica(); chiudiSheet(); });
+
             $('printForm').addEventListener('submit', e => {
                 e.preventDefault();
                 const qta = parseInt($('quantita').value) || 1;
                 const prezzoUnitario = parseFloat($('prezzo').value) || 0;
                 const pesoCad = parseFloat($('peso').value) || 0;
                 const ore = $('oreStampa').value;
+                const stato = $('stato').value;
+                const materiale = $('materiale').value;
 
-                stampeRef.push({
+                const dati = {
                     nome: $('nome').value.trim(),
                     cliente: $('cliente').value.trim(),
+                    telefono: $('telefono').value.trim(),
                     prezzoTotale: prezzoUnitario * qta,
                     quantita: qta,
-                    stato: $('stato').value,
+                    stato,
                     peso: pesoCad ? pesoCad + 'g' : '-',
-                    materiale: $('materiale').value,
+                    materiale,
                     oreStampa: ore ? ore + 'h' : '-',
-                    costoMateriale: pesoCad * qta * 0.02,
+                    costoMateriale: costoMateriale(pesoCad * qta, materiale),
                     data: $('dataOrdine').value || '-',
                     note: $('note').value.trim()
-                }).then(() => toast('Stampa aggiunta'))
-                  .catch(err => toast('Salvataggio non riuscito: ' + err.code));
+                };
 
-                $('printForm').reset();
-                $('quantita').value = '1';
-                $('dataOrdine').value = oggi();
+                if (modificaId) {
+                    const prima = stampe.find(x => x.id === modificaId) || {};
+                    dati.prontoDa = stato === 'Pronto' ? (prima.stato === 'Pronto' && prima.prontoDa ? prima.prontoDa : Date.now()) : null;
+                    stampeRef.child(modificaId).update(dati)
+                        .then(() => toast('Modifiche salvate'))
+                        .catch(err => toast('Salvataggio non riuscito: ' + err.code));
+                    fineModifica();
+                } else {
+                    if (stato === 'Pronto') dati.prontoDa = Date.now();
+                    stampeRef.push(dati)
+                        .then(() => toast('Stampa aggiunta'))
+                        .catch(err => toast('Salvataggio non riuscito: ' + err.code));
+                    azzeraModulo();
+                }
+
                 $('estPeso').value = '';
                 $('estOre').value = '';
-                ultimoPrezzoStimato = 0;
-                $('estRisultato').textContent = eur(0);
+                $('estQta').value = '1';
+                calcolaStima();
                 chiudiSheet();
+            });
+
+            // Se scegli un cliente già noto, riporta il suo numero WhatsApp
+            $('cliente').addEventListener('change', () => {
+                if ($('telefono').value) return;
+                const nome = $('cliente').value.trim().toLowerCase();
+                const trovato = stampe.find(s => (s.cliente || '').toLowerCase() === nome && s.telefono);
+                if (trovato) $('telefono').value = trovato.telefono;
             });
 
             /* ---------- Azioni sulle righe (event delegation, nessun onclick inline) ---------- */
             const lista = $('listaStampe');
             lista.addEventListener('click', e => {
-                const btn = e.target.closest('[data-act]');
+                const btn = e.target.closest('button[data-act]');
                 if (!btn) return;
                 const id = btn.closest('.order').dataset.id;
                 const s = stampe.find(x => x.id === id);
                 if (!s) return;
 
-                if (btn.dataset.act === 'del') {
-                    if (confirm('Vuoi eliminare "' + s.nome + '"?')) {
-                        stampeRef.child(id).remove().then(() => toast('Stampa eliminata'));
+                switch (btn.dataset.act) {
+                    case 'del': {
+                        const { id: _id, ...backup } = s;
+                        stampeRef.child(id).remove().then(() => toast('Stampa eliminata', {
+                            label: 'Annulla',
+                            fn: () => stampeRef.child(id).set(backup).then(() => toast('Stampa ripristinata'))
+                        }));
+                        break;
                     }
-                } else if (btn.dataset.act === 'wa') {
-                    const testo = `Ciao ${s.cliente}! Ti aggiorno sul tuo ordine di stampa 3D ("${s.nome}"). Stato attuale: *${s.stato}*. Totale: € ${(s.prezzoTotale || 0).toFixed(2)}. Grazie!`;
-                    window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(testo), '_blank', 'noopener');
+                    case 'edit':
+                        iniziaModifica(s);
+                        break;
+                    case 'dup': {
+                        const { id: _id, prontoDa, ...nuova } = s;
+                        nuova.stato = 'Da Stampare';
+                        nuova.data = oggi();
+                        stampeRef.push(nuova).then(() => toast('Stampa duplicata'));
+                        break;
+                    }
+                    case 'wa': {
+                        const testo = `Ciao ${s.cliente}! Ti aggiorno sul tuo ordine di stampa 3D ("${s.nome}"). Stato attuale: *${s.stato}*. Totale: € ${(s.prezzoTotale || 0).toFixed(2)}. Grazie!`;
+                        const n = numeroWa(s.telefono);
+                        const url = (n ? 'https://wa.me/' + n : 'https://api.whatsapp.com/send') + '?text=' + encodeURIComponent(testo);
+                        window.open(url, '_blank', 'noopener');
+                        break;
+                    }
                 }
             });
             lista.addEventListener('change', e => {
-                const sel = e.target.closest('[data-act="stato"]');
+                const sel = e.target.closest('select[data-act="stato"]');
                 if (!sel) return;
                 const id = sel.closest('.order').dataset.id;
-                stampeRef.child(id).update({ stato: sel.value }).then(() => toast('Stato aggiornato'));
+                stampeRef.child(id).update({ stato: sel.value, prontoDa: sel.value === 'Pronto' ? Date.now() : null })
+                    .then(() => toast('Stato aggiornato'));
             });
 
             /* ---------- Filtri e ricerca ---------- */
@@ -712,6 +928,24 @@
             });
             let debounce;
             $('cercaInput').addEventListener('input', () => { clearTimeout(debounce); debounce = setTimeout(render, 120); });
+
+            /* ---------- Esporta CSV ---------- */
+            $('btnCsv').addEventListener('click', () => {
+                const sicuro = v => { const t = String(v ?? ''); return /^[=+\-@]/.test(t) ? "'" + t : t; };
+                const righe = [['Data', 'Oggetto', 'Cliente', 'Telefono', 'Quantità', 'Totale €', 'Stato', 'Materiale', 'Peso cad.', 'Tempo cad.', 'Note']];
+                stampe.slice().reverse().forEach(s => righe.push([
+                    fmtData(s.data), sicuro(s.nome), sicuro(s.cliente), sicuro(s.telefono), s.quantita || 1,
+                    (s.prezzoTotale || 0).toFixed(2), s.stato, s.materiale, s.peso, s.oreStampa, sicuro(s.note)
+                ]));
+                const csv = '\ufeff' + righe.map(r => r.map(c => '"' + String(c ?? '').replace(/"/g, '""') + '"').join(';')).join('\r\n');
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+                a.download = 'stampe-' + oggi() + '.csv';
+                document.body.append(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+            });
 
             /* ---------- Contatori animati ---------- */
             const mostrati = {};
@@ -732,6 +966,32 @@
 
             /* ---------- Render ---------- */
             function render() {
+                // Totali generali: non dipendono da ricerca o filtro
+                let incasso = 0, daIncassare = 0, costoTot = 0, ore = 0, grammi = 0;
+                stampe.forEach(s => {
+                    const p = s.prezzoTotale || 0, q = s.quantita || 1;
+                    incasso += p;
+                    costoTot += s.costoMateriale || 0;
+                    if (s.stato !== 'Consegnato') daIncassare += p;
+                    ore += (parseFloat(s.oreStampa) || 0) * q;
+                    grammi += (parseFloat(s.peso) || 0) * q;
+                });
+                setStat('st-totale', incasso, eur);
+                setStat('st-consegno', daIncassare, eur);
+                setStat('st-profitto', incasso - costoTot, eur);
+                setStat('st-count', stampe.length, n => String(Math.round(n)));
+
+                const mostraInsights = caricato && stampe.length > 0;
+                $('insights').classList.toggle('hidden', !mostraInsights);
+                if (mostraInsights) {
+                    const fil = grammi >= 1000 ? (grammi / 1000).toFixed(2) + ' kg' : Math.round(grammi) + ' g';
+                    $('insTesto').textContent = `⏱️ ${Math.round(ore * 10) / 10} ore di stampa · 🧵 ${fil} di filamento`;
+                }
+
+                // Elenco clienti per l'autocompletamento
+                const clienti = [...new Set(stampe.map(s => (s.cliente || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'it'));
+                $('clienti').innerHTML = clienti.map(c => `<option value="${esc(c)}"></option>`).join('');
+
                 const q = $('cercaInput').value.trim().toLowerCase();
                 const base = stampe.filter(s => !q || (s.nome || '').toLowerCase().includes(q) || (s.cliente || '').toLowerCase().includes(q));
 
@@ -741,18 +1001,6 @@
                 });
 
                 const elenco = filtroStato === 'Tutti' ? base : base.filter(s => s.stato === filtroStato);
-
-                let incasso = 0, daIncassare = 0, costi = 0;
-                elenco.forEach(s => {
-                    const p = s.prezzoTotale || 0;
-                    incasso += p;
-                    costi += s.costoMateriale || 0;
-                    if (s.stato !== 'Consegnato') daIncassare += p;
-                });
-                setStat('st-totale', incasso, eur);
-                setStat('st-consegno', daIncassare, eur);
-                setStat('st-profitto', incasso - costi, eur);
-                setStat('st-count', elenco.length, n => String(Math.round(n)));
 
                 if (!caricato) {
                     lista.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>';
@@ -765,20 +1013,25 @@
                     return;
                 }
 
+                const adesso = Date.now();
                 lista.innerHTML = elenco.map(s => {
                     const i = STATI.indexOf(s.stato);
                     const qty = s.quantita > 1 ? `<span class="qty">x${esc(s.quantita)}</span>` : '';
-                    const note = s.note ? ' · ' + esc(s.note) : '';
+                    const note = s.note ? ' · ' + linkify(s.note) : '';
+                    const giorni = s.stato === 'Pronto' && s.prontoDa ? Math.floor((adesso - s.prontoDa) / 864e5) : 0;
+                    const fermo = giorni >= GIORNI_FERMO ? ` · <span class="late">Pronto da ${giorni} giorni</span>` : '';
                     const opts = STATI.map(st => `<option value="${st}"${s.stato === st ? ' selected' : ''}>${st}</option>`).join('');
                     return `
                     <article class="order st-${i}" data-id="${esc(s.id)}">
-                        <div class="o-name"><strong>${esc(s.nome)}</strong>${qty}<small>${esc(fmtData(s.data))}${note}</small></div>
+                        <div class="o-name"><strong>${esc(s.nome)}</strong>${qty}<small>${esc(fmtData(s.data))}${fermo}${note}</small></div>
                         <div class="o-client">${esc(s.cliente)}</div>
                         <div class="o-total">${eur(s.prezzoTotale || 0)}</div>
                         <div class="o-info">${esc(s.materiale)} (${esc(s.peso)})<br>⏱️ ${esc(s.oreStampa)}</div>
                         <div class="o-status"><select class="status-select" data-act="stato" aria-label="Stato di ${esc(s.nome)}">${opts}</select></div>
                         <div class="o-actions">
-                            <button class="icon-btn wa" type="button" data-act="wa" title="Invia promemoria WhatsApp" aria-label="Invia promemoria WhatsApp">💬</button>
+                            <button class="icon-btn wa" type="button" data-act="wa" title="Invia messaggio WhatsApp" aria-label="Invia messaggio WhatsApp">💬</button>
+                            <button class="icon-btn edit" type="button" data-act="edit" title="Modifica" aria-label="Modifica stampa">✏️</button>
+                            <button class="icon-btn dup" type="button" data-act="dup" title="Duplica" aria-label="Duplica stampa">📋</button>
                             <button class="icon-btn del" type="button" data-act="del" title="Elimina" aria-label="Elimina stampa">🗑️</button>
                         </div>
                         <div class="layers" data-step="${i + 1}" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
@@ -786,6 +1039,7 @@
                 }).join('');
             }
 
+            calcolaStima();
             render();
         });
     </script>
